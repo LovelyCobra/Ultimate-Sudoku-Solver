@@ -1,6 +1,4 @@
-import os
-import sys
-import time
+import os, sys, time, itertools, copy
 import print as pr
 
 def digit9_separator(integer):
@@ -12,10 +10,6 @@ def digit9_separator(integer):
         i += 1
     container.reverse()
     return container
-
-def print_board(board):
-    for row in board:
-        print(" ".join(map(str, row)))
 
 def is_valid(brd, r, c, val):
 	for i in range(9):
@@ -43,7 +37,7 @@ global counter
 global count
 global round
 	
-def filling_singles(brd):
+def filling_singles(brd, col):
 	global counter
 	global count
 	global round
@@ -54,13 +48,14 @@ def filling_singles(brd):
 				vgs = valid_guesses(brd, r, c)
 				if len(vgs) == 1:
 					brd[r][c] = vgs[0]
+					col[r][c] = "\033[91m"
 					counter += 1
 					os.system('cls' if os.name == 'nt' else 'clear')
 					print("Pre-filling with iteration:")
-					pr.print_board(brd)
-					print(f"Values found: {count + counter}")
-					print(f"Round: {round + 1}")
-					time.sleep(0.2)
+					pr.print_board(brd, col)
+					print(f"Values found: \033[91m{count + counter}\033[0m")
+					print(f"Round: \033[94m{round + 1}\033[0m")
+					time.sleep(0.5)
 			
 def finding_hidden_singles(brd, r, c):
 	vgs = valid_guesses(brd, r, c)
@@ -97,7 +92,7 @@ def finding_hidden_singles(brd, r, c):
 	return None
 					
 					
-def filling_hidden_singles(brd):
+def filling_hidden_singles(brd, col):
 	global counter
 	global count
 	global round
@@ -106,28 +101,30 @@ def filling_hidden_singles(brd):
 			temp = finding_hidden_singles(brd, r, c)
 			if temp != None and brd[r][c] == 0:
 				brd[r][c] = temp
+				col[r][c] = "\033[91m"
 				counter += 1
 				os.system('cls' if os.name == 'nt' else 'clear')
 				print("Pre-filling with iteration:")
-				pr.print_board(brd)
-				print(f"Values found: {count + counter}")
-				print(f"Round: {round + 1}")
-				time.sleep(0.2)
+				pr.print_board(brd, col)
+				print(f"Values found: \033[91m{count + counter}\033[0m")
+				print(f"Round: \033[94m{round + 1}\033[0m")
+				time.sleep(0.5)
 
-def pre_filling(brd):
+def pre_filling(brd, col):
 	global counter
 	global count
 	global round
 	count = 0
 	round = 0
-	filling_singles(brd)
-	filling_hidden_singles(brd)
+	color_matrix = []
+	filling_singles(brd, col)
+	filling_hidden_singles(brd, col)
 	count += counter
 	round += 1
 	
 	while counter != 0:
-		filling_singles(brd)
-		filling_hidden_singles(brd)
+		filling_singles(brd, col)
+		filling_hidden_singles(brd, col)
 		count += counter
 		round += 1
 		
@@ -146,7 +143,7 @@ def first_empty(brd):
 global guess_count
 guess_count = 0
 
-def is_solvable(brd):
+def is_solvable(brd, col):
 		global guess_count
 		
 		row, column = first_empty(brd)
@@ -156,77 +153,94 @@ def is_solvable(brd):
 		for val in range(1, 10):
 			if is_valid(brd, row, column, val):
 				brd[row][column] = val
+				col[row][column] = "\033[91m"
 				guess_count += 1
+				# if guess_count % 100 == 0:
+				# 	os.system('cls' if os.name == 'nt' else 'clear')
+				# 	print(guess_count)
+				# 	pr.print_board(brd)
+				# 	time.sleep(0.04)
 					
-				if is_solvable(brd):
+				if is_solvable(brd, col):
 					return True
 				
 			brd[row][column] = 0
 		return False
-				
+
+switch = True		
+def show_spinner():
+    spinner = itertools.cycle(['-', '\\', '|', '/'])  # Spinner characters
+    while True:
+        if switch:
+            sys.stdout.write(f'\rSolving the rest of the sudoku by recursion: \033[91m{next(spinner)}\033[0m, Elapsed time: \033[92m{int(time.time() - start_time)}\033[0m seconds, Guesses made: \033[94m{guess_count}\033[0m') # \r returns the cursor to the beginning of the line
+        else:
+            sys.stdout.write(f'\rNow solving the sudoku by recursion only: \033[91m{next(spinner)}\033[0m, Elapsed time: \033[92m{int(time.time() - start_time)}\033[0m seconds, Guesses made: \033[94m{guess_count}\033[0m')
+        sys.stdout.flush()  # Flush to ensure output is shown immediately
+        time.sleep(0.05)  # Pause for a brief moment		
      
 		
 if __name__ == '__main__':
+    import threading
+    os.system('cls' if os.name == 'nt' else 'clear')
     
-    board = "029804000, 001070000, 800001050, 050006039, 000705000, 190300060, 080900001, 000080700, 000507390"
+    board = input("\nInput the initial board as a string on nine nine-digit numbers separated by ', ':\n")
+    with open("sudoku_container.txt", "a") as file:
+        file.write(board)
+        file.write("\n")
+        
+    start_time = time.time()
     board = board.split(", ")
     board = list(map(int, board))
-    brd = list(map(digit9_separator, board))
+    board_transformed = list(map(digit9_separator, board))
+    brd_copy = copy.deepcopy(board_transformed)
+    colors = [["" for elem in range(9)] for row in range(9)]
+    os.system('cls' if os.name == 'nt' else 'clear')
 
     print("Initial Board:")
-    pr.print_board(brd)
+    pr.print_board(board_transformed, colors)
     time.sleep(3)
     
-    
-    
     print("Pre-filling with iteration:")
-    holder = pre_filling(brd)
+    holder = pre_filling(board_transformed, colors)
     
-    row, column = first_empty(brd)
+    with open("sudoku_container.txt", "a") as file:
+        file.write(f"{holder[0]} values, {holder[1]-1} rounds, ")
+        # file.write("\n")
+    
+    row, column = first_empty(board_transformed)
     if row is None:
-    	print(f"\nFor this sudoku the iteration was all that was needed to solve it completly.\nAltogether {holder[0]} emty cells were filled during {holder[1] - 1} rounds of the two iterative methods.")
-    	
+        print(f"\nFor this sudoku the iteration was all that was needed to solve it completely.\nAltogether \033[91m{holder[0]}\033[0m empty cells were filled during \033[94m{holder[1]-1}\033[0m rounds of the two iterative methods.\n")
+        with open("sudoku_container.txt", "a") as file:
+            file.write(f"guesses 0\n")
     else:
-    	print(f"\nIteration found {holder[0]} values during {holder[1] - 1} rounds.\n")
-    	
-    	print("\nSolving the rest of the sudoku by recursion:\n")
-    	answer = is_solvable(brd)
-    	if answer is True:
-    	 	print("\nFinal Solution:")
-    	 	pr.print_board(brd)
-    	 	print(f"Number of guesses made: {guess_count}.\n")
-    	else:
-    	 	print(f"This particular sudoku doesn't have a solution.\nNumber of guesses made: {guess_count}.\n")		
-			
-#Boards:
-	#Extreme:
-		#"000046000, 900000080, 000070000, 200000605, 050800000, 000000700, 097000000, 000500030, 406000000" iter: 1 round, 4 values, 7.5 mil, recurs only: 31.4 mil. 
-		#"700000040, 000180000, 000000090, 050000208, 080000600, 000009000, 309700000, 000060500, 004000000"
-		#"200064000, 000900700, 800050000, 090300000, 000000062, 000000084, 000700100, 000080000, 600000000"
-		#"367000000, 000900500, 000000000, 000030087, 400500000, 090000000, 908000400, 000076000, 000002000"
-		#"705000000, 000420000, 800000000, 500068000, 300000400, 000900600, 090600000, 000000057, 000000080"
-		#"270000009, 000400600, 008000000, 000020010, 084000000, 506000000, 000600800, 300070000, 090000000"
-	###"000000001, 000001000, 001000050, 000000003, 000200800, 203000000, 000102400, 060070002, 002008000"
-		#"060200000, 000090070, 050000400, 800000030, 000504000, 000600000, 200000905, 007080000, 000000600"
-		#"600009000, 080000500, 200300000, 050000408, 900600000, 000200700, 300000060, 000070000, 000040000"
-		#"000000000, 000000825, 476000000, 600029007, 003000000, 000500096, 007003000, 008050900, 020000048"
-		#"060900000, 500000020, 000060000, 000500906, 807000000, 000000400, 000007083, 002040000, 090000000" 15 minutes, 37 mil guesses
-		
-	#Expert:
-		#"029804000, 001070000, 800001050, 050006039, 000705000, 190300060, 080900001, 000080700, 000507390"
-		#"008006040, 500009700, 062000019, 000038000, 800901005, 000670000, 640000250, 009500006, 050800900"
-		#"060800302, 000070060, 700900018, 005340000, 600000003, 000097800, 240003007, 070060000, 109002030"
-		#"000000010, 060709000, 870450600, 000023704, 000905000, 609810000, 007092046, 000508020, 090000000"
-		#"405000086, 080000090, 000040200, 061200704, 000407000, 807006930, 006080000, 020000070, 790000608"
-		#"047300009, 050000104, 900005000, 000080602, 520000081, 706090000, 000800006, 805000010, 100009570"
-		#"100000390, 000600000, 900008000, 000001000, 000000780, 307950600, 062800000, 050004000, 000007106" Iteration: 41 values, 7 rounds
-		#"785000006, 000300058, 000080120, 020009003, 008000900, 600400010, 073020000, 150006000, 900000875" Iteration enough
-		#"000100000, 590000046, 080700500, 000802000, 006000008, 000005600, 007000020, 639000000, 008004009" Iteration 22 values, 4 rounds
-	    #"900007260, 060410000, 021000000, 090706000, 500104006, 000905020, 000000980, 000048030, 084600005" Iteration enough, 53 values, 5 rounds
-	
-	#Hard:
-		#"052000010, 004026090, 186000003, 000907000, 069302184, 000018709, 008640907, 013270845, 090000000"
-		#"000007008, 050064190, 340912000, 000091260, 064508000, 700600900, 605430871, 839006000, 001000009"
-
-	#Medium:
-		#"000803000, 357000000, 002910506, 509684002, 060001450, 840025697, 005069003, 108000700, 600500009"
+        print(f"\nIteration found \033[92m{holder[0]}\033[0m values during \033[96m{holder[1]-1}\033[0m rounds.\n")
+        
+        spinner_thread = threading.Thread(target=show_spinner)
+        spinner_thread.daemon = True
+        spinner_thread.start()
+        
+        answer = is_solvable(board_transformed, colors)
+        sys.stdout.write('\rTask completed!                                 \n')
+        
+        with open("sudoku_container.txt", "a") as file:
+            file.write(f"guesses {guess_count}/")
+        
+        if answer is True:
+            print("\nFinal Solution:")
+            pr.print_board(board_transformed, colors)
+            print(f"Number of guesses made: \033[94m{guess_count}\033[0m.\n")
+        else:
+            print(f"This particular sudoku doesn't have a solution.\nNumber of guesses made: \033[94m{guess_count}\033[0m.\n")
+    
+    start_time = time.time()
+    guess_count = 0
+    switch = False
+    
+    spinner_thread = threading.Thread(target=show_spinner)
+    spinner_thread.daemon = True
+    spinner_thread.start()
+    is_solvable(brd_copy, colors)
+    sys.stdout.write(f'\rWhen solving the sudoku with recursion only, the number of guesses needed was: \033[94m{guess_count}\033[0m                                  \n')
+    with open("sudoku_container.txt", "a") as file:
+        file.write(f"{guess_count}\n")
+ 
