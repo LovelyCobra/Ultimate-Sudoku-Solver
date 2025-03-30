@@ -1,5 +1,6 @@
 import os, sys, time, itertools, copy
-import print as pr
+from print import *
+from cobraprint import *
 
 def digit9_separator(integer):
     container = []
@@ -37,7 +38,7 @@ global counter
 global count
 global round
 	
-def filling_singles(brd, col):
+def filling_singles(brd, colm):
 	global counter
 	global count
 	global round
@@ -48,11 +49,11 @@ def filling_singles(brd, col):
 				vgs = valid_guesses(brd, r, c)
 				if len(vgs) == 1:
 					brd[r][c] = vgs[0]
-					col[r][c] = "\033[91m"
+					colm[r][c] = "\033[91m"
 					counter += 1
 					os.system('cls' if os.name == 'nt' else 'clear')
 					print("Pre-filling with iteration:")
-					pr.print_board(brd, col)
+					print_board(brd, colm)
 					print(f"Values found: \033[91m{count + counter}\033[0m")
 					print(f"Round: \033[94m{round + 1}\033[0m")
 					time.sleep(0.5)
@@ -63,9 +64,9 @@ def finding_hidden_singles(brd, r, c):
 	vgs_column = []
 	vgs_square = []
 	
-	for col in range(9):
-		if col != c and brd[r][col] == 0:
-			for val in valid_guesses(brd, r, col):
+	for colm in range(9):
+		if colm != c and brd[r][colm] == 0:
+			for val in valid_guesses(brd, r, colm):
 				if val not in vgs_row:
 					vgs_row.append(val)
 					
@@ -79,9 +80,9 @@ def finding_hidden_singles(brd, r, c):
 	start_c = c//3 * 3
 	
 	for row in range(start_r, start_r + 3):
-		for col in range(start_c, start_c + 3):
-			if [row, col] != [r, c] and brd[row][col] == 0:
-				for val in valid_guesses(brd, row, col):
+		for colm in range(start_c, start_c + 3):
+			if [row, colm] != [r, c] and brd[row][colm] == 0:
+				for val in valid_guesses(brd, row, colm):
 					if val not in vgs_square:
 						vgs_square.append(val)
 				
@@ -92,7 +93,7 @@ def finding_hidden_singles(brd, r, c):
 	return None
 					
 					
-def filling_hidden_singles(brd, col):
+def filling_hidden_singles(brd, colm):
 	global counter
 	global count
 	global round
@@ -101,30 +102,30 @@ def filling_hidden_singles(brd, col):
 			temp = finding_hidden_singles(brd, r, c)
 			if temp != None and brd[r][c] == 0:
 				brd[r][c] = temp
-				col[r][c] = "\033[91m"
+				colm[r][c] = "\033[91m"
 				counter += 1
 				os.system('cls' if os.name == 'nt' else 'clear')
 				print("Pre-filling with iteration:")
-				pr.print_board(brd, col)
+				print_board(brd, colm)
 				print(f"Values found: \033[91m{count + counter}\033[0m")
 				print(f"Round: \033[94m{round + 1}\033[0m")
 				time.sleep(0.5)
 
-def pre_filling(brd, col):
+def pre_filling(brd, colm):
 	global counter
 	global count
 	global round
 	count = 0
 	round = 0
 	color_matrix = []
-	filling_singles(brd, col)
-	filling_hidden_singles(brd, col)
+	filling_singles(brd, colm)
+	filling_hidden_singles(brd, colm)
 	count += counter
 	round += 1
 	
 	while counter != 0:
-		filling_singles(brd, col)
-		filling_hidden_singles(brd, col)
+		filling_singles(brd, colm)
+		filling_hidden_singles(brd, colm)
 		count += counter
 		round += 1
 		
@@ -143,7 +144,7 @@ def first_empty(brd):
 global guess_count
 guess_count = 0
 
-def is_solvable(brd, col):
+def is_solvable(brd, colm, shift=0):
 		global guess_count
 		
 		row, column = first_empty(brd)
@@ -153,15 +154,10 @@ def is_solvable(brd, col):
 		for val in range(1, 10):
 			if is_valid(brd, row, column, val):
 				brd[row][column] = val
-				col[row][column] = "\033[91m"
+				colm[row][column] = "\033[91m"
 				guess_count += 1
-				# if guess_count % 100 == 0:
-				# 	os.system('cls' if os.name == 'nt' else 'clear')
-				# 	print(guess_count)
-				# 	pr.print_board(brd)
-				# 	time.sleep(0.04)
 					
-				if is_solvable(brd, col):
+				if is_solvable(brd, colm):
 					return True
 				
 			brd[row][column] = 0
@@ -197,7 +193,7 @@ if __name__ == '__main__':
     os.system('cls' if os.name == 'nt' else 'clear')
 
     print("Initial Board:")
-    pr.print_board(board_transformed, colors)
+    print_board(board_transformed, colors)
     time.sleep(3)
     
     print("Pre-filling with iteration:")
@@ -213,7 +209,7 @@ if __name__ == '__main__':
         with open("sudoku_container.txt", "a") as file:
             file.write(f"guesses 0\n")
     else:
-        print(f"\nIteration found \033[92m{holder[0]}\033[0m values during \033[96m{holder[1]-1}\033[0m rounds.\n")
+        print(f"{cur_pos_abs(17, 1)}\nIteration found \033[92m{holder[0]}\033[0m values during \033[96m{holder[1]-1}\033[0m rounds.\n")
         
         spinner_thread = threading.Thread(target=show_spinner)
         spinner_thread.daemon = True
@@ -226,11 +222,11 @@ if __name__ == '__main__':
             file.write(f"guesses {guess_count}/")
         
         if answer is True:
-            print("\nFinal Solution:")
-            pr.print_board(board_transformed, colors)
+            print(f"\n{cur_pos_abs(18, 1)}Final Solution:")
+            print_board(board_transformed, colors)
             print(f"Number of guesses made: \033[94m{guess_count}\033[0m.\n")
         else:
-            print(f"This particular sudoku doesn't have a solution.\nNumber of guesses made: \033[94m{guess_count}\033[0m.\n")
+            print(f"{cur_pos_abs(17, 1)}This particular sudoku doesn't have a solution.\nNumber of guesses made: \033[94m{guess_count}\033[0m.\n")
     
     start_time = time.time()
     guess_count = 0
@@ -239,7 +235,7 @@ if __name__ == '__main__':
     spinner_thread = threading.Thread(target=show_spinner)
     spinner_thread.daemon = True
     spinner_thread.start()
-    is_solvable(brd_copy, colors)
+    is_solvable(brd_copy, colors, 33)
     sys.stdout.write(f'\rWhen solving the sudoku with recursion only, the number of guesses needed was: \033[94m{guess_count}\033[0m                                  \n')
     with open("sudoku_container.txt", "a") as file:
         file.write(f"{guess_count}\n")
