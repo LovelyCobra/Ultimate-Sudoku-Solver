@@ -22,7 +22,12 @@ def print_board(brd, colors):
         elif k == 9:
             print("└───────┴───────┴───────┘")
         k += 1
-        
+
+# Transform tables establishing corresponce between rows and columns within sudoku board to coordinates x, y of the terminal screen, to enable printing via ANSI escape codes
+x_ = [3, 4, 5, 7, 8, 9, 11, 12, 13]
+y_ = [3, 5, 7, 11, 13, 15, 19, 21, 23]
+
+
 if __name__ == "__main__":
     os.system('cls' if os.name == 'nt' else 'clear')
     
