@@ -5,7 +5,7 @@ The program uses two simple iterative methods first. These are sufficient to com
 
 When iteration isn't sufficient, the program then proceeds to apply the standard recursion with backtracking. Visualisation is not used for this part since it could prolong the execution to an unacceptable level. At the end the user can see how many trial guesses the recursive method had to make to complete the puzzle.
 
-The the program proceeds to solve the same sudoku again, this time using only the recursion. The trial guesses are counted again and the user then can compare the two numbers to see how much the initial iterative methods shortened the subsequent recursion when compared to just trial and error approach of mere recursion method.
+Then the program proceeds to solve the same sudoku again, this time using only the recursion. The trial guesses are counted again and the user then can compare the two numbers to see how much the initial iterative methods shortened the subsequent recursion when compared to just trial and error approach of mere recursion method.
 
 ### The two iterative methods are:
 1. overt singles: iterating over all empty cells while checking the sets of possible guesses for any of them. If the set of possible guesses for any empty cell contains only one value, then that guess is placed there.
